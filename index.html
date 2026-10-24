@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Timeline Presentation</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FullCalendar v6 -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    
+    <!-- HTML2Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+
+        /* --- FullCalendar Aesthetic Overrides --- */
+        
+        /* Light grey borders for the grid */
+        .fc-theme-standard td, .fc-theme-standard th {
+            border-color: #e5e7eb !important; 
+        }
+        
+        .fc-scrollgrid {
+            border: 1px solid #d1d5db !important; 
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        /* Header styling (MON, TUE, etc.) */
+        .fc-col-header-cell {
+            background-color: #f9fafb;
+            padding: 12px 0 !important;
+        }
+        
+        .fc-col-header-cell-cushion {
+            color: #374151; 
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+        }
+
+        /* Day Cells */
+        .fc-daygrid-day {
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+        
+        .fc-daygrid-day:hover {
+            background-color: #f3f4f6;
+        }
+        
+        .fc-day-other {
+            background-color: #f9fafb; 
+            opacity: 0.7;
+        }
+        
+        /* Date Number Positioning (Top-Left) */
+        .fc .fc-daygrid-day-top {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            padding: 8px;
+        }
+
+        .fc-daygrid-day-number {
+            font-weight: 600;
+            color: #4b5563;
+            font-size: 0.875rem;
+        }
+
+        /* Event Bars */
+        .fc-event {
+            border: none !important;
+            border-radius: 6px !important;
+            padding: 4px 8px !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            margin: 2px 4px !important;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+            color: #111827 !important; /* Dark text for readability on pastel backgrounds */
+        }
+        
+        .fc-event:hover {
+            filter: brightness(0.95);
+            transform: scale(1.01);
+        }
+
+        /* Toolbar Styling */
+        .fc-toolbar-title {
+            font-weight: 700 !important;
+            font-size: 1.5rem !important;
+            color: #1f2937;
+        }
+        
+        .fc-button-primary {
+            background-color: #ffffff !important;
+            color: #4b5563 !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 6px !important;
+            text-transform: capitalize !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.2s;
+        }
+        
+        .fc-button-primary:hover {
+            background-color: #f3f4f6 !important;
+            color: #111827 !important;
+        }
+        
+        .fc-button-active {
+            background-color: #e5e7eb !important;
+            color: #111827 !important;
+        }
+        
+        .fc-button:focus {
+            box-shadow: none !important;
+        }
+
+        /* Slide Container Setup */
+        #slide-container {
+            background-color: white;
+            min-height: 700px;
+        }
+
+        /* SweetAlert Customizations */
+        .custom-swal-input {
+            width: 100% !important;
+            margin: 10px 0 !important;
+            box-sizing: border-box;
+        }
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 0 5px;
+        }
+        .color-picker-wrapper label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 1rem;
+        }
+        .color-input {
+            width: 60px;
+            height: 40px;
+            cursor: pointer;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 2px;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center min-h-screen">
+
+    <!-- Top Action Bar -->
+    <div class="w-full max-w-6xl flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Timeline Planner</h1>
+            <p class="text-gray-500 mt-1">Drag across dates to add a task. Drag tasks to move or resize.</p>
+        </div>
+        
+        <button id="exportBtn" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export to PNG
+        </button>
+    </div>
+
+    <!-- Presentation Slide Area (Export Target) -->
+    <div id="slide-container" class="w-full max-w-6xl shadow-md rounded-xl p-8 border border-gray-200">
+        <!-- Editable Slide Header -->
+        <div class="mb-6 border-b border-gray-100 pb-4">
+            <h2 class="text-2xl font-bold text-gray-900 focus:outline-none focus:bg-gray-50 p-1 rounded" contenteditable="true" spellcheck="false" title="Click to edit project title">
+                Project Name: 3D Animation Campaign
+            </h2>
+            <p class="text-gray-500 font-medium mt-1 focus:outline-none focus:bg-gray-50 p-1 rounded" contenteditable="true" spellcheck="false" title="Click to edit subtitle">
+                Working Timeline (Updated)
+            </p>
+        </div>
+
+        <!-- Calendar Element -->
+        <div id="calendar"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+
+            // Generate relative dates for sample data based on current month
+            var today = new Date();
+            var y = today.getFullYear();
+            var m = String(today.getMonth() + 1).padStart(2, '0');
+            
+            // Format dates dynamically so they always show up on the current month view
+            var sampleEvents = [
+                {
+                    id: 'task-1',
+                    title: 'Assets / Brief',
+                    start: `${y}-${m}-03`,
+                    end: `${y}-${m}-07`,
+                    backgroundColor: '#fde047' // pastel yellow
+                },
+                {
+                    id: 'task-2',
+                    title: 'Layout + Animation',
+                    start: `${y}-${m}-08`,
+                    end: `${y}-${m}-15`,
+                    backgroundColor: '#fbcfe8' // pastel pink
+                },
+                {
+                    id: 'task-3',
+                    title: 'Stress Test Kiosk / Mapping',
+                    start: `${y}-${m}-16`,
+                    end: `${y}-${m}-20`,
+                    backgroundColor: '#bbf7d0' // pastel green
+                }
+            ];
+
+            // Initialize FullCalendar
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                firstDay: 1, // Start on Monday
+                height: 'auto',
+                
+                // Allow interaction
+                editable: true,
+                selectable: true,
+                eventResizableFromStart: true,
+                
+                // Header layout
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: '' 
+                },
+                
+                // Format day headers
+                dayHeaderFormat: { weekday: 'short' },
+                
+                // Format date numbers inside cells
+                dayCellContent: function(arg) {
+                    let dateNum = arg.date.getDate();
+                    let monthStr = arg.date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+                    // Show month text only on the 1st of the month or first day of the grid
+                    let displayStr = (dateNum === 1 || arg.isStart) ? `${dateNum} ${monthStr}` : dateNum;
+                    return { html: `<div class="fc-daygrid-day-number">${displayStr}</div>` };
+                },
+
+                events: sampleEvents,
+
+                // 1. CREATE EVENT ON SELECT
+                select: async function(info) {
+                    const { value: formValues } = await Swal.fire({
+                        title: 'Add New Task',
+                        html: `
+                            <div style="text-align: left;">
+                                <label for="swal-title" style="font-size: 0.875rem; font-weight: 600; color: #4b5563;">Task Name</label>
+                                <input id="swal-title" class="swal2-input custom-swal-input" placeholder="e.g. Rendering Phase" autofocus>
+                                
+                                <div class="color-picker-wrapper">
+                                    <label for="swal-color">Highlight Color:</label>
+                                    <input type="color" id="swal-color" class="color-input" value="#93c5fd">
+                                </div>
+                            </div>
+                        `,
+                        focusConfirm: false,
+                        showCancelButton: true,
+                        confirmButtonText: 'Add Task',
+                        confirmButtonColor: '#2563eb', // blue-600
+                        preConfirm: () => {
+                            const title = document.getElementById('swal-title').value;
+                            if (!title) {
+                                Swal.showValidationMessage('Please enter a task name');
+                                return false;
+                            }
+                            return {
+                                title: title,
+                                color: document.getElementById('swal-color').value
+                            }
+                        }
+                    });
+
+                    if (formValues) {
+                        calendar.addEvent({
+                            id: String(Date.now()), // Generate unique ID
+                            title: formValues.title,
+                            start: info.startStr,
+                            end: info.endStr,
+                            backgroundColor: formValues.color,
+                            allDay: info.allDay
+                        });
+                    }
+                    calendar.unselect();
+                },
+
+                // 2. EDIT OR DELETE EVENT ON CLICK
+                eventClick: async function(info) {
+                    const event = info.event;
+                    
+                    const { value: formValues, isDenied } = await Swal.fire({
+                        title: 'Edit Task',
+                        html: `
+                            <div style="text-align: left;">
+                                <label for="edit-title" style="font-size: 0.875rem; font-weight: 600; color: #4b5563;">Task Name</label>
+                                <input id="edit-title" class="swal2-input custom-swal-input" value="${event.title}">
+                                
+                                <div class="color-picker-wrapper">
+                                    <label for="edit-color">Highlight Color:</label>
+                                    <input type="color" id="edit-color" class="color-input" value="${event.backgroundColor}">
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        denyButtonText: 'Delete Task',
+                        denyButtonColor: '#ef4444', // red-500
+                        confirmButtonText: 'Save',
+                        confirmButtonColor: '#2563eb',
+                        preConfirm: () => {
+                            const title = document.getElementById('edit-title').value;
+                            if (!title) {
+                                Swal.showValidationMessage('Task name cannot be empty');
+                                return false;
+                            }
+                            return {
+                                title: title,
+                                color: document.getElementById('edit-color').value
+                            }
+                        }
+                    });
+
+                    if (isDenied) {
+                        event.remove();
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Task deleted',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+                    } else if (formValues) {
+                        event.setProp('title', formValues.title);
+                        event.setProp('backgroundColor', formValues.color);
+                    }
+                }
+            });
+
+            calendar.render();
+
+            // 3. EXPORT TO PNG LOGIC
+            document.getElementById('exportBtn').addEventListener('click', function() {
+                const btn = this;
+                const originalText = btn.innerHTML;
+                
+                // Show loading state
+                btn.innerHTML = 'Capturing...';
+                btn.classList.add('opacity-75', 'cursor-wait');
+                
+                const slideContainer = document.getElementById('slide-container');
+                
+                // Brief timeout to allow UI update before html2canvas freezes thread
+                setTimeout(() => {
+                    html2canvas(slideContainer, {
+                        scale: 2, // High resolution for presentations
+                        backgroundColor: '#ffffff',
+                        logging: false
+                    }).then(canvas => {
+                        // Create download link
+                        let link = document.createElement('a');
+                        const dateStr = new Date().toISOString().slice(0,10);
+                        link.download = `Timeline_Slide_${dateStr}.png`;
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        
+                        // Reset button
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('opacity-75', 'cursor-wait');
+                        
+                        // Success message
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Image exported successfully!',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        
+                    }).catch(err => {
+                        console.error("Export Error: ", err);
+                        Swal.fire('Error', 'Failed to export image.', 'error');
+                        btn.innerHTML = originalText;
+                        btn.classList.remove('opacity-75', 'cursor-wait');
+                    });
+                }, 200);
+            });
+        });
+    </script>
+</body>
+</html>
