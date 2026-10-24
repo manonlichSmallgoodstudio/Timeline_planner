@@ -3,420 +3,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Timeline Presentation</title>
+    <title>Timeline Calendar for Slide Export</title>
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+    <!-- SweetAlert2 CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css' rel='stylesheet' />
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FullCalendar v6 -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-    
-    <!-- HTML2Canvas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* bg-gray-100 */
-        }
-
-        /* --- FullCalendar Aesthetic Overrides --- */
-        
-        /* Light grey borders for the grid */
-        .fc-theme-standard td, .fc-theme-standard th {
-            border-color: #e5e7eb !important; 
-        }
-        
-        .fc-scrollgrid {
-            border: 1px solid #d1d5db !important; 
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #ffffff;
-        }
-
-        /* Header styling (MON, TUE, etc.) */
-        .fc-col-header-cell {
-            background-color: #f9fafb;
-            padding: 12px 0 !important;
-        }
-        
-        .fc-col-header-cell-cushion {
-            color: #374151; 
-            font-weight: 700;
-            font-size: 0.875rem;
-            text-transform: uppercase;
-        }
-
-        /* Day Cells */
-        .fc-daygrid-day {
-            background-color: #ffffff;
-            transition: background-color 0.2s;
-        }
-        
-        .fc-daygrid-day:hover {
-            background-color: #f3f4f6;
-        }
-        
-        .fc-day-other {
-            background-color: #f9fafb; 
-            opacity: 0.7;
-        }
-        
-        /* Date Number Positioning (Top-Left) */
-        .fc .fc-daygrid-day-top {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
             display: flex;
-            flex-direction: row;
-            justify-content: flex-start;
-            padding: 8px;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .fc-daygrid-day-number {
+        /* Toolbar Styling */
+        .toolbar {
+            background: #ffffff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 1080px;
+            box-sizing: border-box;
+        }
+
+        .toolbar-section {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .toolbar-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .toolbar-section span {
+            font-size: 13px;
             font-weight: 600;
-            color: #4b5563;
-            font-size: 0.875rem;
+            color: #475569;
+            min-width: 110px;
         }
 
-        /* Event Bars */
+        .toolbar label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f8fafc;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .toolbar input[type="color"] {
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .btn-export {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Prompt', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+            margin-left: auto;
+        }
+
+        .btn-export:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Slide Container for Export */
+        #slide-container {
+            background-color: #e8ecf1;
+            width: 1120px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+
+        .slide-header {
+            margin-bottom: 20px;
+        }
+
+        .slide-header h2 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            color: #1e293b;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .slide-header p {
+            margin: 0;
+            font-size: 16px;
+            color: #64748b;
+            outline: none;
+        }
+
+        /* FullCalendar Customization */
+        #calendar {
+            background: transparent;
+            --fc-border-color: #94a3b8; /* ตัวแปรควบคุมสีเส้นขอบหลักของ FullCalendar */
+        }
+
+        .fc-theme-standard .fc-scrollgrid,
+        .fc-theme-standard td, 
+        .fc-theme-standard th,
+        .fc-theme-standard .fc-col-header,
+        .fc-theme-standard .fc-daygrid-body {
+            border-color: var(--fc-border-color) !important;
+        }
+
+        /* Header Cells (MON-SUN) */
+        .fc-col-header-cell {
+            background-color: rgba(255, 255, 255, 0.6);
+            padding: 10px 0 !important;
+            font-weight: 600;
+            color: #1e293b; 
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        /* Day Grid Cells */
+        .fc-daygrid-day {
+            background-color: rgba(255, 255, 255, 0.3);
+            height: 100px !important;
+        }
+
+        /* Date Numbers */
+        .fc-daygrid-day-number {
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155; 
+            padding: 8px !important;
+            float: left;
+        }
+
+        /* Task Bars */
         .fc-event {
             border: none !important;
             border-radius: 6px !important;
             padding: 4px 8px !important;
-            font-size: 0.875rem !important;
-            font-weight: 600 !important;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            margin: 2px 4px !important;
-            cursor: pointer;
-            transition: transform 0.1s, filter 0.2s;
-            color: #111827 !important; /* Dark text for readability on pastel backgrounds */
-        }
-        
-        .fc-event:hover {
-            filter: brightness(0.95);
-            transform: scale(1.01);
-        }
-
-        /* Toolbar Styling */
-        .fc-toolbar-title {
-            font-weight: 700 !important;
-            font-size: 1.5rem !important;
-            color: #1f2937;
-        }
-        
-        .fc-button-primary {
-            background-color: #ffffff !important;
-            color: #4b5563 !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 6px !important;
-            text-transform: capitalize !important;
-            font-weight: 500 !important;
-            padding: 0.5rem 1rem !important;
-            transition: all 0.2s;
-        }
-        
-        .fc-button-primary:hover {
-            background-color: #f3f4f6 !important;
-            color: #111827 !important;
-        }
-        
-        .fc-button-active {
-            background-color: #e5e7eb !important;
-            color: #111827 !important;
-        }
-        
-        .fc-button:focus {
-            box-shadow: none !important;
-        }
-
-        /* Slide Container Setup */
-        #slide-container {
-            background-color: white;
-            min-height: 700px;
-        }
-
-        /* SweetAlert Customizations */
-        .custom-swal-input {
-            width: 100% !important;
-            margin: 10px 0 !important;
-            box-sizing: border-box;
-        }
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 15px;
-            padding: 0 5px;
-        }
-        .color-picker-wrapper label {
             font-weight: 500;
-            color: #374151;
-            font-size: 1rem;
-        }
-        .color-input {
-            width: 60px;
-            height: 40px;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             cursor: pointer;
-            border: 2px solid #e5e7eb;
-            border-radius: 6px;
-            padding: 2px;
-            background-color: #fff;
+            margin-top: 2px !important;
+        }
+
+        /* Calendar Title (Month/Year) */
+        .fc-toolbar-title {
+            font-size: 18px !important;
+            color: #1e293b; 
+            font-weight: 600;
+        }
+
+        .fc-button-primary {
+            background-color: #475569 !important;
+            border-color: #475569 !important;
+            font-family: 'Prompt', sans-serif !important;
+            font-size: 13px !important;
+        }
+        .fc-button-primary:hover {
+            background-color: #334155 !important;
         }
     </style>
 </head>
-<body class="p-4 md:p-8 flex flex-col items-center min-h-screen">
+<body>
 
-    <!-- Top Action Bar -->
-    <div class="w-full max-w-6xl flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-            <h1 class="text-3xl font-bold text-gray-800">Timeline Planner</h1>
-            <p class="text-gray-500 mt-1">Drag across dates to add a task. Drag tasks to move or resize.</p>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <!-- Section 1: Backgrounds & Structure -->
+        <div class="toolbar-section">
+            <span>🎨 Backgrounds:</span>
+            <label>Slide BG <input type="color" id="bgColorPicker" value="#e8ecf1"></label>
+            <label>Cell BG <input type="color" id="cellBgColorPicker" value="#ffffff"></label>
+            <label>Header BG <input type="color" id="headerBgColorPicker" value="#ffffff"></label>
+            <label>Grid Border <input type="color" id="borderColorPicker" value="#94a3b8"></label>
         </div>
-        
-        <button id="exportBtn" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export to PNG
-        </button>
+
+        <!-- Section 2: Typography Colors -->
+        <div class="toolbar-section">
+            <span>✏️ Typography:</span>
+            <label>Title <input type="color" id="titleColorPicker" value="#1e293b"></label>
+            <label>Subtitle <input type="color" id="subtitleColorPicker" value="#64748b"></label>
+            <label>Mon-Sun <input type="color" id="headerColorPicker" value="#1e293b"></label>
+            <label>Date Num <input type="color" id="dateNumColorPicker" value="#334155"></label>
+            <label>Month/Year <input type="color" id="monthTitleColorPicker" value="#1e293b"></label>
+            
+            <button class="btn-export" onclick="exportSlide()">📥 Export PNG</button>
+        </div>
     </div>
 
-    <!-- Presentation Slide Area (Export Target) -->
-    <div id="slide-container" class="w-full max-w-6xl shadow-md rounded-xl p-8 border border-gray-200">
-        <!-- Editable Slide Header -->
-        <div class="mb-6 border-b border-gray-100 pb-4">
-            <h2 class="text-2xl font-bold text-gray-900 focus:outline-none focus:bg-gray-50 p-1 rounded" contenteditable="true" spellcheck="false" title="Click to edit project title">
-                Project Name: 3D Animation Campaign
-            </h2>
-            <p class="text-gray-500 font-medium mt-1 focus:outline-none focus:bg-gray-50 p-1 rounded" contenteditable="true" spellcheck="false" title="Click to edit subtitle">
-                Working Timeline (Updated)
-            </p>
+    <!-- Slide Container -->
+    <div id="slide-container">
+        <div class="slide-header">
+            <h2 id="project-title" contenteditable="true">Timeline Schedule</h2>
+            <p id="project-subtitle" contenteditable="true">Total working time: 2 Weeks (Click to edit text)</p>
         </div>
-
-        <!-- Calendar Element -->
         <div id="calendar"></div>
     </div>
 
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <!-- SweetAlert2 JS -->
+    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+    <!-- html2canvas JS -->
+    <script src='https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js'></script>
+
     <script>
+        let calendar;
+
         document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar');
-
-            // Generate relative dates for sample data based on current month
-            var today = new Date();
-            var y = today.getFullYear();
-            var m = String(today.getMonth() + 1).padStart(2, '0');
+            const calendarEl = document.getElementById('calendar');
             
-            // Format dates dynamically so they always show up on the current month view
-            var sampleEvents = [
-                {
-                    id: 'task-1',
-                    title: 'Assets / Brief',
-                    start: `${y}-${m}-03`,
-                    end: `${y}-${m}-07`,
-                    backgroundColor: '#fde047' // pastel yellow
-                },
-                {
-                    id: 'task-2',
-                    title: 'Layout + Animation',
-                    start: `${y}-${m}-08`,
-                    end: `${y}-${m}-15`,
-                    backgroundColor: '#fbcfe8' // pastel pink
-                },
-                {
-                    id: 'task-3',
-                    title: 'Stress Test Kiosk / Mapping',
-                    start: `${y}-${m}-16`,
-                    end: `${y}-${m}-20`,
-                    backgroundColor: '#bbf7d0' // pastel green
-                }
-            ];
-
-            // Initialize FullCalendar
-            var calendar = new FullCalendar.Calendar(calendarEl, {
+            calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                firstDay: 1, // Start on Monday
-                height: 'auto',
-                
-                // Allow interaction
-                editable: true,
-                selectable: true,
-                eventResizableFromStart: true,
-                
-                // Header layout
+                locale: 'en',
+                initialDate: '2026-10-01',
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: '' 
+                    right: ''
                 },
+                height: 'auto',
+                selectable: true,
+                editable: true,
+                dayMaxEvents: true,
                 
-                // Format day headers
-                dayHeaderFormat: { weekday: 'short' },
-                
-                // Format date numbers inside cells
-                dayCellContent: function(arg) {
-                    let dateNum = arg.date.getDate();
-                    let monthStr = arg.date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-                    // Show month text only on the 1st of the month or first day of the grid
-                    let displayStr = (dateNum === 1 || arg.isStart) ? `${dateNum} ${monthStr}` : dateNum;
-                    return { html: `<div class="fc-daygrid-day-number">${displayStr}</div>` };
-                },
+                events: [
+                    { id: '1', title: 'Assets / Brief', start: '2026-10-22', end: '2026-10-25', backgroundColor: '#f59e0b', textColor: '#ffffff' },
+                    { id: '2', title: 'Layout + Animation', start: '2026-10-26', end: '2026-10-28', backgroundColor: '#cbd5e1', textColor: '#1e293b' },
+                    { id: '3', title: 'Draft 1', start: '2026-10-29', end: '2026-10-29', backgroundColor: '#10b981', textColor: '#ffffff' },
+                    { id: '4', title: 'Revision per Comment', start: '2026-10-30', end: '2026-11-02', backgroundColor: '#cbd5e1', textColor: '#1e293b' },
+                    { id: '5', title: 'Draft 2', start: '2026-11-04', end: '2026-11-04', backgroundColor: '#10b981', textColor: '#ffffff' },
+                    { id: '6', title: 'Stress Test Kiosk / Mapping', start: '2026-11-05', end: '2026-11-06', backgroundColor: '#f59e0b', textColor: '#ffffff' },
+                    { id: '7', title: 'LIVE !!', start: '2026-11-10', end: '2026-11-10', backgroundColor: '#f43f5e', textColor: '#ffffff' }
+                ],
 
-                events: sampleEvents,
-
-                // 1. CREATE EVENT ON SELECT
                 select: async function(info) {
                     const { value: formValues } = await Swal.fire({
                         title: 'Add New Task',
-                        html: `
-                            <div style="text-align: left;">
-                                <label for="swal-title" style="font-size: 0.875rem; font-weight: 600; color: #4b5563;">Task Name</label>
-                                <input id="swal-title" class="swal2-input custom-swal-input" placeholder="e.g. Rendering Phase" autofocus>
-                                
-                                <div class="color-picker-wrapper">
-                                    <label for="swal-color">Highlight Color:</label>
-                                    <input type="color" id="swal-color" class="color-input" value="#93c5fd">
-                                </div>
-                            </div>
-                        `,
+                        html:
+                            '<input id="swal-input1" class="swal2-input" placeholder="Task name e.g. Draft 1" style="font-family: Prompt;">' +
+                            '<div style="text-align: left; margin: 10px 20px; font-size: 14px; font-weight: 500;">Highlight Bar Color:</div>' +
+                            '<input type="color" id="swal-input2" value="#f59e0b" style="width: 100%; height: 40px; border: none; cursor: pointer; border-radius: 6px;">' +
+                            '<div style="text-align: left; margin: 10px 20px; font-size: 14px; font-weight: 500;">Text Color:</div>' +
+                            '<input type="color" id="swal-input3" value="#ffffff" style="width: 100%; height: 40px; border: none; cursor: pointer; border-radius: 6px;">',
                         focusConfirm: false,
                         showCancelButton: true,
-                        confirmButtonText: 'Add Task',
-                        confirmButtonColor: '#2563eb', // blue-600
-                        preConfirm: () => {
-                            const title = document.getElementById('swal-title').value;
-                            if (!title) {
-                                Swal.showValidationMessage('Please enter a task name');
-                                return false;
-                            }
-                            return {
-                                title: title,
-                                color: document.getElementById('swal-color').value
-                            }
-                        }
+                        confirmButtonText: 'Save',
+                        cancelButtonText: 'Cancel',
+                        preConfirm: () => [
+                            document.getElementById('swal-input1').value,
+                            document.getElementById('swal-input2').value,
+                            document.getElementById('swal-input3').value
+                        ]
                     });
 
-                    if (formValues) {
+                    if (formValues && formValues[0]) {
                         calendar.addEvent({
-                            id: String(Date.now()), // Generate unique ID
-                            title: formValues.title,
+                            id: String(Date.now()),
+                            title: formValues[0],
                             start: info.startStr,
                             end: info.endStr,
-                            backgroundColor: formValues.color,
-                            allDay: info.allDay
+                            backgroundColor: formValues[1],
+                            textColor: formValues[2]
                         });
                     }
                     calendar.unselect();
                 },
 
-                // 2. EDIT OR DELETE EVENT ON CLICK
                 eventClick: async function(info) {
                     const event = info.event;
-                    
-                    const { value: formValues, isDenied } = await Swal.fire({
-                        title: 'Edit Task',
-                        html: `
-                            <div style="text-align: left;">
-                                <label for="edit-title" style="font-size: 0.875rem; font-weight: 600; color: #4b5563;">Task Name</label>
-                                <input id="edit-title" class="swal2-input custom-swal-input" value="${event.title}">
-                                
-                                <div class="color-picker-wrapper">
-                                    <label for="edit-color">Highlight Color:</label>
-                                    <input type="color" id="edit-color" class="color-input" value="${event.backgroundColor}">
-                                </div>
-                            </div>
-                        `,
+                    const { value: formValues } = await Swal.fire({
+                        title: 'Manage Task',
+                        html:
+                            `<input id="swal-input1" class="swal2-input" value="${event.title}" style="font-family: Prompt;">` +
+                            `<div style="text-align: left; margin: 10px 20px; font-size: 14px; font-weight: 500;">Change Bar Color:</div>` +
+                            `<input type="color" id="swal-input2" value="${event.backgroundColor || '#3788d8'}" style="width: 100%; height: 40px; border: none; cursor: pointer; border-radius: 6px;">` +
+                            `<div style="text-align: left; margin: 10px 20px; font-size: 14px; font-weight: 500;">Change Text Color:</div>` +
+                            `<input type="color" id="swal-input3" value="${event.textColor || '#ffffff'}" style="width: 100%; height: 40px; border: none; cursor: pointer; border-radius: 6px;">`,
+                        focusConfirm: false,
                         showCancelButton: true,
                         showDenyButton: true,
-                        denyButtonText: 'Delete Task',
-                        denyButtonColor: '#ef4444', // red-500
                         confirmButtonText: 'Save',
-                        confirmButtonColor: '#2563eb',
-                        preConfirm: () => {
-                            const title = document.getElementById('edit-title').value;
-                            if (!title) {
-                                Swal.showValidationMessage('Task name cannot be empty');
-                                return false;
-                            }
-                            return {
-                                title: title,
-                                color: document.getElementById('edit-color').value
-                            }
-                        }
+                        denyButtonText: 'Delete Task',
+                        cancelButtonText: 'Cancel',
+                        preConfirm: () => [
+                            document.getElementById('swal-input1').value,
+                            document.getElementById('swal-input2').value,
+                            document.getElementById('swal-input3').value
+                        ]
                     });
 
-                    if (isDenied) {
+                    if (formValues) {
+                        event.setProp('title', formValues[0]);
+                        event.setProp('backgroundColor', formValues[1]);
+                        event.setProp('textColor', formValues[2]);
+                    } else if (Swal.getResult().isDenied) {
                         event.remove();
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: 'Task deleted',
-                            showConfirmButton: false,
-                            timer: 1500
-                        });
-                    } else if (formValues) {
-                        event.setProp('title', formValues.title);
-                        event.setProp('backgroundColor', formValues.color);
                     }
                 }
             });
 
             calendar.render();
 
-            // 3. EXPORT TO PNG LOGIC
-            document.getElementById('exportBtn').addEventListener('click', function() {
-                const btn = this;
-                const originalText = btn.innerHTML;
-                
-                // Show loading state
-                btn.innerHTML = 'Capturing...';
-                btn.classList.add('opacity-75', 'cursor-wait');
-                
-                const slideContainer = document.getElementById('slide-container');
-                
-                // Brief timeout to allow UI update before html2canvas freezes thread
-                setTimeout(() => {
-                    html2canvas(slideContainer, {
-                        scale: 2, // High resolution for presentations
-                        backgroundColor: '#ffffff',
-                        logging: false
-                    }).then(canvas => {
-                        // Create download link
-                        let link = document.createElement('a');
-                        const dateStr = new Date().toISOString().slice(0,10);
-                        link.download = `Timeline_Slide_${dateStr}.png`;
-                        link.href = canvas.toDataURL('image/png');
-                        link.click();
-                        
-                        // Reset button
-                        btn.innerHTML = originalText;
-                        btn.classList.remove('opacity-75', 'cursor-wait');
-                        
-                        // Success message
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: 'Image exported successfully!',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                        
-                    }).catch(err => {
-                        console.error("Export Error: ", err);
-                        Swal.fire('Error', 'Failed to export image.', 'error');
-                        btn.innerHTML = originalText;
-                        btn.classList.remove('opacity-75', 'cursor-wait');
-                    });
-                }, 200);
+            // Real-time Event Listeners for Styling
+            document.getElementById('bgColorPicker').addEventListener('input', e => {
+                document.getElementById('slide-container').style.backgroundColor = e.target.value;
+            });
+            
+            // แก้ไขจุดเปลี่ยนสีเส้นขอบตารางให้ทำงานสมบูรณ์
+            document.getElementById('borderColorPicker').addEventListener('input', e => {
+                const color = e.target.value;
+                calendarEl.style.setProperty('--fc-border-color', color);
+            });
+
+            document.getElementById('cellBgColorPicker').addEventListener('input', e => {
+                const color = e.target.value;
+                document.querySelectorAll('.fc-daygrid-day').forEach(el => {
+                    el.style.backgroundColor = color;
+                });
+            });
+            document.getElementById('headerBgColorPicker').addEventListener('input', e => {
+                const color = e.target.value;
+                document.querySelectorAll('.fc-col-header-cell').forEach(el => {
+                    el.style.backgroundColor = color;
+                });
+            });
+            document.getElementById('titleColorPicker').addEventListener('input', e => {
+                document.getElementById('project-title').style.color = e.target.value;
+            });
+            document.getElementById('subtitleColorPicker').addEventListener('input', e => {
+                document.getElementById('project-subtitle').style.color = e.target.value;
+            });
+            document.getElementById('headerColorPicker').addEventListener('input', e => {
+                document.querySelectorAll('.fc-col-header-cell').forEach(el => el.style.color = e.target.value);
+            });
+            document.getElementById('dateNumColorPicker').addEventListener('input', e => {
+                document.querySelectorAll('.fc-daygrid-day-number').forEach(el => el.style.color = e.target.value);
+            });
+            document.getElementById('monthTitleColorPicker').addEventListener('input', e => {
+                document.querySelectorAll('.fc-toolbar-title').forEach(el => el.style.color = e.target.value);
             });
         });
+
+        // Export PNG Function
+        function exportSlide() {
+            const slide = document.getElementById('slide-container');
+            html2canvas(slide, { scale: 2, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'timeline-schedule.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
     </script>
 </body>
 </html>
